@@ -153,7 +153,7 @@
 			$debugPoint("setup");
 
 		loc.params = $paramParser(argumentCollection=arguments);
-		
+
 		// set params in the request scope as well so we can display it in the debug info outside of the dispatch / controller context
 		request.wheels.params = loc.params;
 
@@ -380,11 +380,11 @@
 		}
 
 		// filter out illegal characters from the controller and action arguments
-		arguments.params.controller = ReReplace(arguments.params.controller, "[^0-9A-Za-z-_]", "", "all");
+		arguments.params.controller = ReReplace(arguments.params.controller, "[^0-9A-Za-z-_.]", "", "all");
 		arguments.params.action = ReReplace(arguments.params.action, "[^0-9A-Za-z-_]", "", "all");
 
 		// convert controller to upperCamelCase and action to normal camelCase
-		arguments.params.controller = REReplace(arguments.params.controller, "(^|-)([a-z])", "\u\2", "all");
+		arguments.params.controller = REReplace(arguments.params.controller, "-([a-z])", "\u\1", "all");
 		arguments.params.action = REReplace(arguments.params.action, "-([a-z])", "\u\1", "all");
 
 	</cfscript>
