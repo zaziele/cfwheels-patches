@@ -69,11 +69,13 @@
 </cffunction>
 
 <cffunction name="$orderByClause" returntype="string" access="public" output="false">
+	<cfargument name="sql" type="array" required="true">
 	<cfargument name="order" type="string" required="true">
 	<cfargument name="include" type="string" required="true">
 	<cfscript>
 		var loc = {};
 		loc.returnValue = "";
+		loc.toAdd = "";
 		if (Len(arguments.order))
 		{
 			if (arguments.order == "random")
@@ -99,12 +101,13 @@
 					loc.iItem = Trim(ListGetAt(arguments.order, loc.i));
 					if (!FindNoCase(" ASC", loc.iItem) && !FindNoCase(" DESC", loc.iItem))
 						loc.iItem = loc.iItem & " ASC";
-					if (loc.iItem Contains ".")
+					if (loc.iItem Contains "." OR REFind("\b(COUNT|SUM|MAX|MIN|AVG)\b", loc.iItem) GT 0)
 					{
 						loc.returnValue = ListAppend(loc.returnValue, loc.iItem);
 					}
 					else
 					{
+						loc.selectColumn = (REFind("AS " & ListFirst(Trim(loc.iItem), " "), arguments.sql[1]) GT 0);
 						loc.property = ListLast(SpanExcluding(loc.iItem, " "), ".");
 						loc.jEnd = ArrayLen(loc.classes);
 						for (loc.j=1; loc.j <= loc.jEnd; loc.j++)
@@ -127,8 +130,10 @@
 								}
 							}
 						}
-						if (application.wheels.showErrorInformation && !Len(loc.toAdd))
+						if (application.wheels.showErrorInformation && !Len(loc.toAdd) && !loc.selectColumn)
 							$throw(type="Wheels.ColumnNotFound", message="Wheels looked for the column mapped to the `#loc.property#` property but couldn't find it in the database table.", extendedInfo="Verify the `order` argument and/or your property to column mappings done with the `property` method inside the model's `init` method to make sure everything is correct.");
+						else if (!Len(loc.toAdd) && loc.selectColumn)
+							loc.returnValue = ListAppend(loc.returnValue, loc.iItem);
 					}
 				}
 			}
@@ -272,7 +277,7 @@
 						}
 						else if (ListFindNoCase(loc.classData.calculatedPropertyList, loc.iItem) && arguments.addCalculatedProperties)
 						{
-							loc.toAppend = loc.toAppend & "(" & Replace(loc.classData.calculatedProperties[loc.iItem].sql, ",", "[[comma]]", "all") & ") AS " & loc.iItem;
+							loc.toAppend = loc.toAppend & Replace(loc.classData.calculatedProperties[loc.iItem].sql, ",", "[[comma]]", "all") & " AS " & loc.iItem;
 						}
 						loc.addedPropertiesByModel[loc.classData.modelName] = ListAppend(loc.addedPropertiesByModel[loc.classData.modelName], loc.iItem);
 						break;

@@ -233,7 +233,7 @@
 					ArrayAppend(loc.sql, loc.groupBy);
 				if (Len(arguments.having))
 					ArrayAppend(loc.sql, "HAVING #arguments.having#");
-				loc.orderBy = $orderByClause(order=arguments.order, include=arguments.include);
+				loc.orderBy = $orderByClause(sql=loc.sql, order=arguments.order, include=arguments.include);
 				if (Len(loc.orderBy))
 					ArrayAppend(loc.sql, loc.orderBy);
 				$addToCache(key=loc.queryShellKey, value=loc.sql, category="sql");
