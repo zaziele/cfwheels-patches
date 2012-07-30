@@ -549,6 +549,9 @@
 		// when count is 1 we don't need to pluralize at all so just set the return value to the input string
 		loc.returnValue = loc.text;
 
+		// keep track of the success of any rule matches
+		loc.ruleMatched = false;
+		
 		if (arguments.count != 1)
 		{
 
@@ -562,8 +565,12 @@
 			}
 			loc.uncountables = "advice,air,blood,deer,equipment,fish,food,furniture,garbage,graffiti,grass,homework,housework,information,knowledge,luggage,mathematics,meat,milk,money,music,pollution,research,rice,sand,series,sheep,soap,software,species,sugar,traffic,transportation,travel,trash,water,feedback";
 			loc.irregulars = "child,children,foot,feet,man,men,move,moves,person,people,sex,sexes,tooth,teeth,woman,women";
-			if (ListFindNoCase(loc.uncountables, loc.text))
+			if (ListFindNoCase(loc.uncountables, loc.text)) {
 				loc.returnValue = loc.text;
+				
+				// note that we successfully matched a rule
+				loc.ruleMatched = true;
+			}
 			else if (ListFindNoCase(loc.irregulars, loc.text))
 			{
 				loc.pos = ListFindNoCase(loc.irregulars, loc.text);
@@ -573,6 +580,9 @@
 					loc.returnValue = ListGetAt(loc.irregulars, loc.pos+1);
 				else
 					loc.returnValue = loc.text;
+				
+				// note that we successfully matched a rule
+				loc.ruleMatched = true;
 			}
 			else
 			{
@@ -595,6 +605,7 @@
 					if(REFindNoCase(loc.rules[loc.i][1], loc.text))
 					{
 						loc.returnValue = REReplaceNoCase(loc.text, loc.rules[loc.i][1], loc.rules[loc.i][2]);
+						loc.ruleMatched = true;
 						break;
 					}
 				}
@@ -602,7 +613,7 @@
 			}
 
 			// this was a camelCased string and we need to prepend the unchanged part to the result
-			if (StructKeyExists(loc, "prepend"))
+			if (StructKeyExists(loc, "prepend") && loc.ruleMatched)
 				loc.returnValue = loc.prepend & loc.returnValue;
 
 		}
