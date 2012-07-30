@@ -111,7 +111,7 @@
 				}
 				if (ListFindNoCase(application.wheels.existingLayoutFiles, variables.params.controller) || loc.layoutFileExists)
 				{
-					loc.include = loc.include & "/" & variables.params.controller & "/" & "layout.cfm";
+					loc.include = loc.include & "/" & ListChangeDelims(variables.params.controller, "/", ".") & "/" & "layout.cfm";
 				}
 				else
 				{

@@ -164,7 +164,7 @@
 		var templateName = "";
 		
 		if (!Len(arguments.template))
-			templateName = "/" & arguments.controller & "/" & arguments.action;
+			templateName = "/" & ListChangeDelims(arguments.controller, "/", ".") & "/" & arguments.action;
 		else
 			templateName = arguments.template;
 			
