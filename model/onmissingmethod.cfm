@@ -220,7 +220,10 @@
 					if (StructKeyExists(arguments.missingMethodArguments, "where"))
 						loc.where = "(#loc.where#) AND (#arguments.missingMethodArguments.where#)";
 					loc.singularKey = singularize(loc.key);
-					loc.name = ReplaceNoCase(ReplaceNoCase(arguments.missingMethodName, loc.key, "objects"), loc.singularKey, "object"); // create a generic method name (example: "hasComments" becomes "hasObjects")
+					if (loc.key EQ loc.singularKey)
+						loc.name = ReplaceNoCase(arguments.missingMethodName, loc.singularKey, "object");
+					else
+						loc.name = ReplaceNoCase(ReplaceNoCase(arguments.missingMethodName, loc.key, "objects"), loc.singularKey, "object"); // create a generic method name (example: "hasComments" becomes "hasObjects")
 					if (loc.name == "objects")
 					{
 						loc.method = "findAll";
