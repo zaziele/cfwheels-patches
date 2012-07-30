@@ -69,7 +69,8 @@
 					for (loc.i=1; loc.i <= loc.iEnd; loc.i++)
 					{
 						loc.item = ListGetAt(loc.order, loc.i);
-						loc.column = SpanExcluding(Reverse(SpanExcluding(Reverse(loc.item), ".")), " ");
+						loc.itemAs = REReplace(loc.item, ".+ AS (\w+( ASC| DESC)?)\s*$", "\1");
+						loc.column = SpanExcluding(Reverse(SpanExcluding(Reverse(loc.itemAs), ".")), " ");
 						if (ListFind(loc.doneColumns, loc.column))
 						{
 							loc.done++;
@@ -82,7 +83,7 @@
 				}
 	
 				// select clause always comes first in the array, the order by clause last, remove the leading keywords leaving only the columns and set to the ones used in the inner most sub query
-				loc.thirdSelect = ReplaceNoCase(ReplaceNoCase(arguments.sql[1], "SELECT DISTINCT ", ""), "SELECT ", "");
+				loc.thirdSelect = REReplaceNoCase(REReplaceNoCase(arguments.sql[1], "^SELECT DISTINCT ", ""), "^SELECT ", "");
 				loc.thirdOrder = ReplaceNoCase(arguments.sql[ArrayLen(arguments.sql)], "ORDER BY ", "");
 				if (loc.containsGroup)
 					loc.thirdGroup = ReplaceNoCase(arguments.sql[ArrayLen(arguments.sql) - 1], "GROUP BY ", "");
@@ -114,7 +115,7 @@
 				loc.secondOrder = Replace(ReReplace(ReReplace(loc.firstOrder, " DESC\b", chr(7), "all"), " ASC\b", " DESC", "all"), chr(7), " ASC", "all");
 	
 				// fix column aliases from order by clauses
-				loc.thirdOrder = $columnAlias(list=loc.thirdOrder, action="remove");
+				loc.thirdOrder = $columnAlias(list=loc.thirdOrder, action="remove", noSubQuery=true);
 				loc.secondOrder = $columnAlias(list=loc.secondOrder, action="keep");
 				loc.firstOrder = $columnAlias(list=loc.firstOrder, action="keep");
 	
