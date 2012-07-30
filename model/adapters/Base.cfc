@@ -30,6 +30,7 @@
 	<cffunction name="$columnAlias" returntype="string" access="public" output="false">
 		<cfargument name="list" type="string" required="true">
 		<cfargument name="action" type="string" required="true">
+		<cfargument name="noSubQuery" type="string" default="false">
 		<cfscript>
 			var loc = {};
 			loc.returnValue = "";
@@ -46,7 +47,7 @@
 						loc.iItem = Mid(loc.iItem, 1, Len(loc.iItem)-Len(loc.sort));
 					}
 					loc.alias = Reverse(SpanExcluding(Reverse(loc.iItem), " "));
-					if (arguments.action == "keep")
+					if (arguments.action == "keep" || (arguments.noSubQuery && Find("SELECT", loc.iItem) GT 0))
 							loc.iItem = loc.alias; // keeps the alias only
 					else if (arguments.action == "remove")
 						loc.iItem = Replace(loc.iItem, " AS " & loc.alias, ""); // removes the alias
@@ -68,7 +69,7 @@
 				// remove the column aliases from the order by clause (this is passed in so that we can handle sub queries with calculated properties)
 				loc.pos = ArrayLen(loc.returnValue);
 				loc.orderByClause = ReplaceNoCase(loc.returnValue[loc.pos], "ORDER BY ", "");
-				loc.returnValue[loc.pos] = "ORDER BY " & $columnAlias(list=loc.orderByClause, action="remove");
+				loc.returnValue[loc.pos] = "ORDER BY " & $columnAlias(list=loc.orderByClause, action="remove", noSubQuery=true);
 			}
 		</cfscript>
 		<cfreturn loc.returnValue>
