@@ -258,6 +258,8 @@
 	<cfscript>
 		var applicationPath = Replace(GetCurrentTemplatePath(), "\", "/", "all");
 		var callingPath = Replace(GetBaseTemplatePath(), "\", "/", "all");
+		if (Find("/tests/", callingPath) GT 0)
+			return;
 		if (ListLen(callingPath, "/") GT ListLen(applicationPath, "/") || GetFileFromPath(callingPath) == "root.cfm")
 		{
 			$header(statusCode="404", statusText="Not Found");
