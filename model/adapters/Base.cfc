@@ -19,7 +19,7 @@
 			for (loc.i=1; loc.i <= loc.iEnd; loc.i++)
 			{
 				loc.iItem = ListGetAt(arguments.list, loc.i);
-				if (arguments.action == "remove")
+				if (arguments.action == "remove" AND Find(".", loc.iItem) GT 0)
 					loc.iItem = ListRest(loc.iItem, "."); // removes table names
 				loc.returnValue = ListAppend(loc.returnValue, loc.iItem);
 			}
