@@ -175,17 +175,23 @@
 				}
 				else
 				{
-					loc.values = findAll($limit=loc.limit, $offset=loc.offset, select=primaryKeys(), where=arguments.where, order=arguments.order, include=arguments.include, reload=arguments.reload, cache=arguments.cache, distinct=loc.distinct, parameterize=arguments.parameterize, includeSoftDeletes=arguments.includeSoftDeletes);
-					if (loc.values.RecordCount)
-					{
+					if (Len(arguments.group))
+						loc.paginationKeys = arguments.group;
+					else
+						loc.paginationKeys = primaryKeys();
+					loc.values = findAll($limit=loc.limit, $offset=loc.offset, select=loc.paginationKeys, where=arguments.where, order=arguments.order, include=arguments.include, reload=arguments.reload, cache=arguments.cache, distinct=loc.distinct, parameterize=arguments.parameterize, includeSoftDeletes=arguments.includeSoftDeletes);
+					if (loc.values.RecordCount) {
 						loc.paginationWhere = "";
 						for (loc.k=1; loc.k <= loc.values.RecordCount; loc.k++)
 						{
 							loc.keyComboValues = [];
-							loc.iEnd = ListLen(primaryKeys());
+							loc.iEnd = ListLen(loc.paginationKeys);
+							loc.classes = $expandedAssociations(arguments.include);
+							ArrayPrepend(loc.classes, variables.wheels.class);
 							for (loc.i=1; loc.i <= loc.iEnd; loc.i++)
 							{
 								loc.property = primaryKeys(loc.i);
+								loc.property = ListGetAt(loc.paginationKeys, loc.i);
 								ArrayAppend(loc.keyComboValues, "#tableName()#.#loc.property# = #variables.wheels.class.adapter.$quoteValue(str=loc.values[loc.property][loc.k], type=validationTypeForProperty(loc.property))#");
 							}
 							loc.paginationWhere = ListAppend(loc.paginationWhere, "(" & ArrayToList(loc.keyComboValues, " AND ") & ")", Chr(7));
