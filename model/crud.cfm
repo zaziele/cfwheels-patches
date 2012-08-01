@@ -150,7 +150,7 @@
 			if (arguments.count gt 0)
 				loc.totalRecords = arguments.count;
 			else
-				loc.totalRecords = this.count(where=arguments.where, include=arguments.include, reload=arguments.reload, cache=arguments.cache, distinct=loc.distinct, parameterize=arguments.parameterize, includeSoftDeletes=arguments.includeSoftDeletes);
+				loc.totalRecords = this.count(where=arguments.where, include=arguments.include, reload=arguments.reload, cache=arguments.cache, distinct=loc.distinct, parameterize=arguments.parameterize, includeSoftDeletes=arguments.includeSoftDeletes, group=arguments.group);
 			loc.currentPage = arguments.page;
 			if (loc.totalRecords == 0)
 			{

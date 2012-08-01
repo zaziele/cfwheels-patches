@@ -76,20 +76,55 @@
 	<cfargument name="include" type="string" required="false" default="" hint="See documentation for @findAll.">
 	<cfargument name="parameterize" type="any" required="false" hint="See documentation for @findAll.">
 	<cfargument name="includeSoftDeletes" type="boolean" required="false" default="false" hint="See documentation for @findAll.">
+	<cfargument name="group" type="string" required="false" default="">
 	<cfscript>
 		var returnValue = "";
 		$args(name="count", args=arguments);
 		arguments.type = "COUNT";
-		arguments.property = ListFirst(primaryKey());
-		if (Len(arguments.include))
+		
+		if (Len(arguments.group)) {
 			arguments.distinct = true;
-		else
+			arguments.property = arguments.group;
+			StructDelete(arguments, "group");
+		} else if (Len(arguments.include)) {
+			arguments.distinct = true;
+			arguments.property = primaryKey();
+		} else {
 			arguments.distinct = false;
-		returnValue = $calculate(argumentCollection=arguments);
+			arguments.property = "*";
+		}
+
+		if (arguments.distinct)
+			returnValue = $countRecords(argumentCollection=arguments);
+		else
+			returnValue = $calculate(argumentCollection=arguments);
 		if (IsNumeric(returnValue))
 			return returnValue;
 		else
 			return 0;
+	</cfscript>
+</cffunction>
+
+<cffunction name="$countRecords" returntype="numeric" access="public">
+	<cfargument name="property" type="string" required="true">
+	<cfargument name="where" type="string" required="false" default="">
+	<cfargument name="include" type="string" required="false" default="">
+	<cfargument name="distinct" type="boolean" required="false" default="false">
+	<cfargument name="includeSoftDeletes" type="boolean" required="false" default="false">
+	<cfscript>
+		var loc = {};
+		
+		// build SQL using wheels internals
+		loc.sql = [];
+		ArrayAppend(loc.sql, $selectClause(select=arguments.property, include=arguments.include, distinct=arguments.distinct, returnAs="query"));
+		ArrayAppend(loc.sql, $fromClause(include=arguments.include, includeSoftDeletes=arguments.includeSoftDeletes));
+		loc.sql = $addWhereClause(sql=loc.sql, where=arguments.where, include=arguments.include, includeSoftDeletes=arguments.includeSoftDeletes);
+		loc.sql = $addWhereClauseParameters(sql=loc.sql, where=arguments.where);
+		ArrayPrepend(loc.sql, "SELECT COUNT(*) AS queryresult FROM (");
+		ArrayAppend(loc.sql, ") AS resultset");
+		
+		// run query against the adapter
+		return variables.wheels.class.adapter.$query(sql=loc.sql, parameterize=true).query.queryResult;
 	</cfscript>
 </cffunction>
 
@@ -195,16 +230,20 @@
 
 		// create a list of columns for the `SELECT` clause either from regular properties on the model or calculated ones
 		loc.properties = "";
-		loc.iEnd = ListLen(arguments.property);
-		for (loc.i=1; loc.i <= loc.iEnd; loc.i++)
-		{
-			loc.iItem = Trim(ListGetAt(arguments.property, loc.i));
-			if (ListFindNoCase(variables.wheels.class.propertyList, loc.iItem))
-				loc.properties = ListAppend(loc.properties, tableName() & "." & variables.wheels.class.properties[loc.iItem].column);
-			else if (ListFindNoCase(variables.wheels.class.calculatedPropertyList, loc.iItem))
-				loc.properties = ListAppend(loc.properties, variables.wheels.class.calculatedProperties[loc.iItem].sql);
+		if (arguments.property NEQ "*") {
+			loc.iEnd = ListLen(arguments.property);
+			for (loc.i=1; loc.i <= loc.iEnd; loc.i++)
+			{
+				loc.iItem = Trim(ListGetAt(arguments.property, loc.i));
+				if (ListFindNoCase(variables.wheels.class.propertyList, loc.iItem))
+					loc.properties = ListAppend(loc.properties, tableName() & "." & variables.wheels.class.properties[loc.iItem].column);
+				else if (ListFindNoCase(variables.wheels.class.calculatedPropertyList, loc.iItem))
+					loc.properties = ListAppend(loc.properties, variables.wheels.class.calculatedProperties[loc.iItem].sql);
+			}
+			arguments.select = arguments.select & loc.properties;
+		} else {
+			arguments.select = arguments.select & arguments.property;
 		}
-		arguments.select = arguments.select & loc.properties;
 
 		// alias the result with `AS`, this means that Wheels will not try and change the string (which is why we have to add the table name above since it won't be done automatically)
 		arguments.select = arguments.select & ") AS wheelsqueryresult";
